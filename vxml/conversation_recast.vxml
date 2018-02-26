@@ -1,0 +1,137 @@
+<?xml version = "1.0"?>
+<vxml version = "2.1" xmlns="http://www.w3.org/2001/vxml" application="root.vxml">
+  <var name="start" expr="true"/>
+
+  <var name="prompt" expr="''"/>
+  <var name="prompt_repeat" expr="''"/>
+  <var name="prompt_audio" expr="''"/>
+
+  <var name="url_to_invoke" expr="''"/>
+  <var name="url_args"/>
+  <var name="url_result" expr="''"/>
+
+  <script>
+var context = { conversation_id: id};
+var event = { name: 'WELCOME', data: {}};
+  </script>
+
+  <var name="answer" expr="'VIDE'" />
+  <var name="sessionId" expr="id"/>
+  <var name="query" expr="'?'"/>
+  <var name="action" expr="'?'"/>
+
+  <form id="main">
+    <!-- Init for API.AI -->
+    <block cond="start">
+      <assign name="query" expr="session.connection.remote.uri"/>
+      <script>log(name+': Mark:"'+query+'"');</script>
+      <data name="api" src="https://api.api.ai/v1/query?v=20150910" method="post" enctype="application/json" namelist="timezone lang contexts sessionId query" fetchtimeout="15s"/>
+      <log><value expr="name"/> : mark:<value expr="query"/> context:<value expr="context"/></log>
+      <data name="api" src="https://api.api.ai/v1/query?v=20150910" method="post" enctype="application/json" namelist="timezone lang contexts sessionId event" fetchtimeout="15s"/>
+      <assign name="answer" expr="api.result.fulfillment.speech"/>
+      <assign name="action" expr="api.result.action"/>
+      <log><value expr="name"/> : result:<value expr="api"/></log>
+      <assign name="prompt" expr="answer"/>
+      <script>log(name+'(event): '+prompt);</script>
+      <assign name="start" expr="false"/>
+      <assign name="event.name" expr="false"/>
+   </block>
+
+    <!-- Throw an event -->
+    <block cond="event.name != ''">
+      <data name="api" src="https://api.api.ai/v1/query?v=20150910" method="post" enctype="application/json" namelist="timezone lang contexts sessionId event" fetchtimeout="15s"/>
+      <assign name="answer" expr="api.result.metadata.intentName"/>
+      <assign name="answer" expr="api.result.fulfillment.speech"/>
+      <assign name="action" expr="api.result.action"/>
+      <log><value expr="name"/> : result:<value expr="api"/></log>
+      <assign name="start" expr="false"/>
+      <assign name="prompt" expr="answer"/>
+      <script>log(name+'(event:): '+prompt);</script>
+      <assign name="event.name" expr="false"/>
+    </block>
+
+    <!-- Get the user input-->
+    <field cond="true" name = "text">
+      <grammar srcexpr="'alias_'+lang+'.grxml'"/>
+      <grammar srcexpr="'phrases_'+lang+'.txt'"/>
+      <grammar srcexpr="'builtin:grammar/text?lang='+lang"/>
+      <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+      <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+      <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+      <filled>
+        <prompt cond="lang=='fr' &amp;&amp; echo" xml:lang="fr-FR">Vous avez dit: <value expr="text"/></prompt>
+        <prompt cond="lang=='en' &amp;&amp; echo" xml:lang="en-UK">You said: <value expr="text"/></prompt>
+        <prompt cond="lang=='es' &amp;&amp; echo" xml:lang="es-ES">Has dicho: <value expr="text"/></prompt>
+        <script>log('User: '+text);</script>
+      </filled>
+    </field>
+
+    <!-- Process the user input -->
+    <block name="block">
+      <log><value expr="name"/> : input:<value expr="text"/> context:<value expr="context"/></log>
+      <assign name="query" expr="text"/>
+      <data name="api" src="https://api.api.ai/v1/query?v=20150910" method="post" enctype="application/json" namelist="timezone lang contexts sessionId query" fetchtimeout="15s"/>
+      <log><value expr="name"/> : result:<value expr="api"/></log>
+      <assign name="queries" expr="queries+1"/>
+
+      <if cond="api.hasOwnProperty('result')">
+        <assign name="action" expr="api.result.action.toUpperCase()"/>
+        <!-- EVENT -->
+        <if cond="action == 'EVENT'">
+          <assign name="prompt" expr="api.result.fulfillment.speech"/>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('name')">
+            <assign name="event.name" expr="api.result.parameters.name"/>
+          </if>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(event): '+prompt+':'+event.name);</script>
+        <!-- HANGUP -->
+        <elseif cond="action == 'HANGUP'"/>
+          <assign name="prompt" expr="api.result.fulfillment.speech"/>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(hangup): '+prompt);</script>
+          <disconnect/>
+        <!-- REPEAT -->
+        <elseif cond="action == 'REPEAT'"/>
+          <assign name="prompt_repeat" expr="api.result.fulfillment.speech"/>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt_repeat"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt_repeat"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt_repeat"/></prompt>
+          <script>log(name+'(repeat): '+prompt_repeat+':'+prompt);</script>
+        <!-- TRANSFER -->
+        <elseif cond="action == 'TRANSFER'"/>
+          <assign name="prompt" expr="api.result.fulfillment.speech"/>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('destination')">
+            <assign name="destination" expr="api.result.parameters.destination"/>
+          </if>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(transfer): '+prompt_repeat+':'+prompt);</script>
+          <throw event="agent"/>
+        <!-- AUDIO -->
+        <elseif cond="action == 'AUDIO'"/>
+          <assign name="prompt" expr="api.result.fulfillment.speech"/>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('url')">
+            <assign name="prompt_audio" expr="api.result.parameters.url"/>
+          </if>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(Audio): '+prompt+':'+prompt_audio);</script>
+          <prompt><audio expr="prompt_audio"/></prompt>
+          <assign name="prompt" expr="''"/>
+        <!-- default -->
+        <else/>
+          <assign name="prompt" expr="api.result.fulfillment.speech"/>
+          <script>log(name+': '+prompt);</script>
+        </if>
+      </if>
+
+      <goto next="#main"/>
+    </block>
+  </form>
+ </vxml>

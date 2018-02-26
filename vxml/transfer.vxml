@@ -1,0 +1,307 @@
+<?xml version = "1.0"?>
+<vxml version = "2.1" xmlns="http://www.w3.org/2001/vxml" application="root.vxml">
+  <var name="start" expr="true"/>
+
+  <var name="prompt" expr="''"/>
+  <var name="prompt2" expr="''"/>
+  <var name="prompt_repeat" expr="''"/>
+  <var name="prompt_audio" expr="''"/>
+
+  <var name="url_to_invoke" expr="''"/>
+  <var name="url_args"/>
+  <var name="url_result" expr="''"/>
+
+  <script>
+var context = { conversation_id: id};
+var event = { name: 'WELCOME', data: {}};
+  </script>
+
+  <var name="answer" expr="'VIDE'" />
+  <var name="sessionId" expr="id"/>
+  <var name="query" expr="'?'"/>
+  <var name="action" expr="'?'"/>
+  <var name="parameter" expr="'?'"/>
+
+  <form id="main">
+    <!-- Init for API.AI -->
+    <block cond="start">
+      <assign name="query" expr="session.connection.remote.uri"/>
+      <script>log(name+': Mark:"'+query+'"');</script>
+      <data name="api" src="https://api.api.ai/v1/query?v=20150910" method="post" enctype="application/json" namelist="timezone lang contexts sessionId query" fetchtimeout="15s"/>
+      <log><value expr="name"/> : mark:<value expr="query"/> context:<value expr="context"/></log>
+      <data name="api" src="https://api.api.ai/v1/query?v=20150910" method="post" enctype="application/json" namelist="timezone lang contexts sessionId event" fetchtimeout="15s"/>
+      <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('voice')">
+        <assign name="parameter" expr="api.result.parameters.voice"/>
+        <if cond="parameter == 'default'">
+          <assign name="parameter" expr="''"/>
+        </if>
+      <else/>
+        <assign name="parameter" expr="''"/>
+      </if>
+
+      <if cond="api.result.fulfillment.hasOwnProperty('speech')">
+        <assign name="answer" expr="api.result.fulfillment.speech"/>
+      <elseif cond="api.result.fulfillment.hasOwnProperty('data') &amp; api.result.fulfillment.data.hasOwnProperty('google')"/>
+        <assign name="answer" expr="api.result.fulfillment.data.google.rich_response.items[0].simpleResponse.textToSpeech"/>
+      <else/>
+        <assign name="answer" expr="'ERROR'"/>
+      </if>
+
+      <assign name="action" expr="api.result.action"/>
+      <log><value expr="name"/> : result:<value expr="api"/></log>
+      <assign name="prompt" expr="answer"/>
+      <assign name="start" expr="false"/>
+      <if cond="parameter != ''">
+        <script>log(name+'(event:'+event.name+',voice:'+parameter+'):'+prompt);</script>
+        <assign name="event.name" expr="false"/>
+        <goto next="#voice"/>
+      </if>
+      <script>log(name+'(event:'+event.name+'): '+prompt);</script>
+      <assign name="event.name" expr="false"/>
+    </block>
+
+    <!-- Throw an event -->
+    <block cond="event.name != ''">
+      <data name="api" src="https://api.api.ai/v1/query?v=20150910" method="post" enctype="application/json" namelist="timezone lang contexts sessionId event" fetchtimeout="15s"/>
+      <assign name="answer" expr="api.result.metadata.intentName"/>
+      <assign name="answer" expr="api.result.fulfillment.speech"/>
+      <assign name="action" expr="api.result.action"/>
+      <log><value expr="name"/> : result:<value expr="api"/></log>
+      <assign name="start" expr="false"/>
+      <assign name="prompt" expr="answer"/>
+      <script>log(name+'(event:): '+prompt);</script>
+      <assign name="event.name" expr="false"/>
+    </block>
+
+    <!-- Get the user input-->
+    <field cond="true" name = "text">
+      <grammar srcexpr="'alias_'+lang+'.grxml'"/>
+      <grammar srcexpr="'phrases_'+lang+'.txt'"/>
+      <grammar srcexpr="'builtin:grammar/text?lang='+lang"/>
+      <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/><value expr="prompt2"/></prompt>
+      <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/><value expr="prompt2"/></prompt>
+      <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/><value expr="prompt2"/></prompt>
+      <filled>
+        <prompt cond="lang=='fr' &amp;&amp; echo" xml:lang="fr-FR">Vous avez dit: <value expr="text"/></prompt>
+        <prompt cond="lang=='en' &amp;&amp; echo" xml:lang="en-UK">You said: <value expr="text"/></prompt>
+        <prompt cond="lang=='es' &amp;&amp; echo" xml:lang="es-ES">Has dicho: <value expr="text"/></prompt>
+        <script>log('User: '+text);</script>
+      </filled>
+    </field>
+
+    <!-- Process the user input -->
+    <block name="block">
+      <log><value expr="name"/> : input:<value expr="text"/> context:<value expr="context"/></log>
+      <assign name="query" expr="text"/>
+      <data name="api" src="https://api.api.ai/v1/query?v=20150910" method="post" enctype="application/json" namelist="timezone lang contexts sessionId query" fetchtimeout="15s"/>
+      <log><value expr="name"/> : result:<value expr="api"/></log>
+      <assign name="queries" expr="queries+1"/>
+
+      <if cond="api.hasOwnProperty('result')">
+
+        <if cond="api.result.fulfillment.hasOwnProperty('speech')">
+          <assign name="prompt" expr="api.result.fulfillment.speech"/>
+          <assign name="prompt2" expr="''"/>
+        <elseif cond="api.result.fulfillment.hasOwnProperty('data') &amp; api.result.fulfillment.data.hasOwnProperty('google')"/>
+          <assign name="prompt" expr="api.result.fulfillment.data.google.rich_response.items[0].simpleResponse.textToSpeech"/>
+          <if cond="api.result.fulfillment.data.google.rich_response.items.length &gt; 1">
+            <assign name="prompt2" expr="api.result.fulfillment.data.google.rich_response.items[1].simpleResponse.textToSpeech"/>
+          <else/>
+            <assign name="prompt2" expr="''"/>
+          </if>
+        <else/>
+          <assign name="prompt" expr="'ERROR'"/>
+          <assign name="prompt2" expr="''"/>
+        </if>
+
+        <assign name="action" expr="api.result.action.toUpperCase()"/>
+        <!-- EVENT -->
+        <if cond="action == 'EVENT'">
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('name')">
+            <assign name="event.name" expr="api.result.parameters.name"/>
+          </if>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(event): '+prompt+':'+event.name);</script>
+        <!-- HANGUP -->
+        <elseif cond="action == 'HANGUP'"/>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(hangup): '+prompt);</script>
+          <disconnect/>
+        <!-- REPEAT -->
+        <elseif cond="action == 'REPEAT'"/>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt_repeat"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt_repeat"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt_repeat"/></prompt>
+          <script>log(name+'(repeat): '+prompt_repeat+':'+prompt);</script>
+        <!-- LANGUAGE -->
+        <elseif cond="action == 'LANGUAGE'"/>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('lang')">
+            <assign name="lang" expr="api.result.parameters.lang"/>
+          </if>
+          <assign name="start" expr="true"/>
+          <assign name="event.name" expr="'WELCOME'"/>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR">D'accord, on parle en Français alors.</prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK">So, let's speak in English.</prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES">Vale, ahora te hablo en Español.</prompt>
+          <script>log(name+'(language:'+lang+'):'+prompt);</script>
+          <goto next="#main"/>
+        <!-- VOICE -->
+        <elseif cond="action == 'VOICE'"/>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('voice')">
+            <assign name="parameter" expr="api.result.parameters.voice"/>
+            <if cond="parameter == 'default'">
+              <assign name="parameter" expr="''"/>
+            </if>
+          <else/>
+            <assign name="parameter" expr="''"/>
+          </if>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR">D'accord, je change ma voix.</prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK">I am going to change my voice.</prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES">Entonces voy a cambiar mi voz.</prompt>
+          <script>log(name+'(voice:'+parameter+'):'+prompt);</script>
+          <goto next="#voice"/>
+        <!-- BARGEIN -->
+        <elseif cond="action == 'BARGEIN'"/>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('bargein')">
+            <assign name="parameter" expr="api.result.parameters.bargein"/>
+            <if cond="parameter != 'true'">
+              <assign name="parameter" expr="'false'"/>
+            </if>
+          <else/>
+            <assign name="parameter" expr="'false'"/>
+          </if>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR">Très bien, tu vas pouvoir m'interrompre maintenant.</prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK">You will be able to interrupt my.</prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES">Bien, vas a poder interrumprime cuando hable ahora.</prompt>
+          <script>log(name+'(baregin:'+parameter+'):'+prompt);</script>
+          <goto next="#bargein"/>
+        <!-- AGENT -->
+        <elseif cond="action == 'AGENT'"/>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('token')">
+            <assign name="parameter" expr="api.result.parameters.token"/>
+            <assign name="start" expr="true"/>
+            <assign name="event.name" expr="'WELCOME'"/>
+          </if>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('event')">
+            <assign name="event.name" expr="api.result.parameters.event"/>
+          <else/>
+            <assign name="event.name" expr="'WELCOME'"/>
+          </if>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(token:'+parameter+',event:'+event.name+'):'+prompt);</script>
+          <assign name="parameter" expr="'Bearer '+parameter"/>
+          <goto next="#authorization"/>
+        <!-- TRANSFER -->
+        <elseif cond="action == 'TRANSFER'"/>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('destination')">
+            <assign name="destination" expr="api.result.parameters.destination"/>
+          </if>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(transfer:'+destination+'): '+prompt_repeat+':'+prompt);</script>
+          <goto next="#transfer"/>
+        <!-- CALLBACK -->
+        <elseif cond="action == 'CALLBACK'"/>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(callback:'+caller+'): '+prompt_repeat+':'+prompt);</script>
+          <goto next="#callback"/>
+        <!-- VXML -->
+        <elseif cond="action == 'VXML'"/>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('url')">
+            <assign name="url" expr="api.result.parameters.destination"/>
+          </if>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(vxml:'+url+'): '+prompt_repeat+':'+prompt);</script>
+          <goto expr="url"/>
+        <!-- AUDIO -->
+        <elseif cond="action == 'AUDIO'"/>
+          <if cond="api.result.hasOwnProperty('parameters') &amp;&amp; api.result.parameters.hasOwnProperty('url')">
+            <assign name="prompt_audio" expr="api.result.parameters.url"/>
+          </if>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(Audio): '+prompt+':'+prompt_audio);</script>
+          <prompt><audio expr="prompt_audio"/></prompt>
+          <assign name="prompt" expr="''"/>
+        <!-- default -->
+        <else/>
+          <script>log(name+': '+prompt);</script>
+        </if>
+      </if>
+
+      <goto next="#main"/>
+    </block>
+  </form>
+
+  <form id="voice">
+    <object name="property" classid="property:promptvoice">
+     <param name="value" expr="parameter"/>
+    </object>
+    <block>
+      <goto next="#main"/>
+    </block>
+  </form>
+
+  <form id="bargein">
+    <object name="property" classid="property:bargein">
+     <param name="value" expr="parameter"/>
+    </object>
+    <block>
+      <goto next="#main"/>
+    </block>
+  </form>
+
+  <form id="authorization">
+    <object name="property" classid="property:authorization">
+     <param name="value" expr="parameter"/>
+    </object>
+    <block>
+      <goto next="#main"/>
+    </block>
+  </form>
+
+  <form id="transfer">
+    <block>
+      <script>log('Transfert to :'+destination);</script>
+    </block>
+    <transfer bridge="true" destexpr="'tel:'+destination" connecttimeout="5s" maxtime="700s"/>
+    <block>
+      <script>log('End of transfer.');</script>
+      <disconnect/>
+    </block>
+  </form>
+
+  <form id="callback">
+    <block>
+      <script>log('Transfert to :'+destination);</script>
+    </block>
+    <transfer bridge="true" destexpr="'originate:'+caller+'=Voximal(Voxibot)'" connecttimeout="30s" maxtime="700s"/>
+    <block>
+      <script>log('End of transfer.');</script>
+      <disconnect/>
+    </block>
+  </form>
+
+  <form id="message">
+    <block>
+      <script>log('Message to :'+destination);</script>
+    </block>
+    <block>
+      <script>log('End of transfer.');</script>
+      <disconnect/>
+    </block>
+  </form>
+
+ </vxml>

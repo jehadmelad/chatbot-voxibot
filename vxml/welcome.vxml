@@ -1,0 +1,16 @@
+<?xml version = "1.0"?>
+<vxml version = "2.1" xmlns="http://www.w3.org/2001/vxml" application="root.vxml" xml:lang="fr-FR">
+  <form id="welcome">
+    <property name="promptvoice" value="Agnes"/>
+    <var name="ID" expr="caller"/>
+    <block name="request">
+      <data name="user" src="http://citizencall.schm.fr/identification.php" method="post" namelist="ID" fetchtimeout="15s"/>
+      <assign name="profile" expr="user" />
+    </block>
+    <block name="block">
+      <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="welcome"/></prompt>
+      <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="welcome"/></prompt>
+      <goto expr="'conversation_'+chatbot+'.vxml'"/>
+    </block>
+  </form>
+ </vxml>

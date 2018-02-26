@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<grammar version="1.0" xmlns="http://www.w3.org/2001/06/grammar" mode="voice" tag-format="semantics/1.0" xml:lang="fr-FR">
+  <rule id="alias">
+    <one-of>
+		<item>=gaz
+			<tag>jazz</tag>
+		</item>
+		<item>=chat
+			<tag>jazz</tag>
+		</item>
+		<item>=jot
+			<tag>jazz</tag>
+		</item>
+    </one-of>
+  </rule>
+</grammar>

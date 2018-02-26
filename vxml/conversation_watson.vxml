@@ -1,0 +1,94 @@
+<?xml version = "1.0"?>
+<vxml version = "2.1" xmlns="http://www.w3.org/2001/vxml" application="root.vxml" xml:lang="es-ES">
+
+  <var name="start" expr="true"/>
+
+  <var name="prompt" expr="''"/>
+
+  <var name="url_to_invoke" expr="''"/>
+  <var name="url_args"/>
+  <var name="url_result" expr="''"/>
+
+  <script>
+var context = { conversation_id: id};
+var input = { text: ''};
+  </script>
+
+  <var name="answer" expr="'VIDE'" />
+  <var name="sessionId" expr="session.connection.remote.uri"/>
+
+  <form id="main">
+    <!-- Init for Watson -->
+    <block cond="start">
+      <assign name="input.text" expr="'SALUDO'"/>
+      <log>WATSON : input:<value expr="input"/> context:<value expr="context"/></log>
+      <data name="api" srcexpr="'https://gateway.watsonplatform.net/conversation/api/v1/workspaces/'+workspace+'/message?version=2017-05-26'" method="post" enctype="application/json;charset=utf-8" namelist="input context" fetchtimeout="15s"/>
+      <log>WATSON : result:<value expr="api"/></log>
+      <assign name="start" expr="false"/>
+      <assign name="prompt" expr="''"/>
+      <foreach item="text" array="api.output.text">
+        <assign name="prompt" expr="prompt+text"/>
+      </foreach>
+      <script>log('Watson (init): '+prompt);</script>
+    </block>
+
+    <!-- Get the user input-->
+    <field cond="true" name = "text">
+      <property name="timeout" value="10s"/>
+      <property name="completetimeout" value="700ms"/>
+      <property name="interdigittimeout" value="3000ms"/>
+      <property name="sensitivity" value="0.5"/>
+      <grammar srcexpr="'builtin:grammar/text?'+lang"/>
+      <grammar srcexpr="'alias_'+lang+'.grxml'"/>
+      <grammar srcexpr="'phrases_'+lang+'.txt'"/>
+      <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+      <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+      <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+      <filled>
+        <prompt cond="lang=='fr' &amp;&amp; echo" xml:lang="fr-FR">Vous avez dit: <value expr="text"/></prompt>
+        <prompt cond="lang=='en' &amp;&amp; echo" xml:lang="en-UK">You said: <value expr="text"/></prompt>
+        <prompt cond="lang=='es' &amp;&amp; echo" xml:lang="es-ES">Has dicho: <value expr="text"/></prompt>
+        <assign name="input.text" expr="text"/>
+        <script>log('User: '+text);</script>
+      </filled>
+    </field>
+
+    <!-- Process the user input -->
+    <block name="block">
+      <log>WATSON : input:<value expr="input"/> context:<value expr="context"/></log>
+      <data name="api" srcexpr="'https://gateway.watsonplatform.net/conversation/api/v1/workspaces/'+workspace+'/message?version=2017-05-26'" method="post" enctype="application/json;charset=utf-8" namelist="input context" fetchtimeout="15s"/>
+      <log>WATSON : result:<value expr="api"/></log>
+      <assign name="queries" expr="queries+1"/>
+
+      <if cond="api.intents.length &gt; 0">
+        <assign name="answer" expr="api.intents[0].intent"/>
+      </if>
+
+      <if cond="api.context.hasOwnProperty('request')">
+        <assign name="url_to_invoke" expr="api.context.request.args.url_to_invoke"/>
+      </if>
+
+      <if cond="api.intents.length &gt; 0">
+        <assign name="url_args" expr="api.entities"/>
+      </if>
+
+      <if cond="url_to_invoke != ''">
+        <data name="result" srcexpr="url_to_invoke" method="post" enctype="application/json" namelist="url_args" fetchtimeout="15s"/>
+      </if>
+
+      <if cond="api.hasOwnProperty('output')">
+        <assign name="prompt" expr="''"/>
+        <foreach item="text" array="api.output.text">
+          <assign name="prompt" expr="prompt+text"/>
+        </foreach>
+        <script>log('Watson: '+prompt);</script>
+      </if>
+
+      <if cond="api.hasOwnProperty('context')">
+        <assign name="context" expr="api.context"/>
+      </if>
+
+      <goto next="#main"/>
+    </block>
+  </form>
+ </vxml>

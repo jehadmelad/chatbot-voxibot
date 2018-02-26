@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<vxml version="2.1" xmlns="http://www.w3.org/2001/vxml" application="root.vxml">
+
+  <!-- Welcome -->
+  <form id="welcome">
+    <block>
+      <script>log('Welcome');</script>
+      <prompt cond="true">
+        Bonjour,
+      </prompt>
+      <prompt cond="true">
+        Ulex recrute, nous avons peut-être un poste pour vous.
+      </prompt>
+      <goto next="#info" />
+    </block>
+  </form>
+
+  <!-- Info -->
+  <form id="info">
+    <block>
+      <script>log('Information');</script>
+      <script>log('Information: Caller='+caller);</script>
+      <prompt>
+        nous recrutons actuellement, des agents pour des postes de Réceptionnaires et de préparateurs de commande.
+        Si vous êtes intéressé par ces poste, rappeler nous sur ce numéro.
+        Merci et à bientôt.
+      </prompt>
+    </block>
+  </form>
+</vxml>

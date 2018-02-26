@@ -1,0 +1,84 @@
+<?xml version = "1.0"?>
+<vxml version = "2.1" xmlns="http://www.w3.org/2001/vxml" application="root.vxml" xml:lang="fr-FR">
+
+  <var name="start" expr="true"/>
+
+  <var name="prompt" expr="''"/>
+
+  <var name="id" />
+  <var name="ask" expr="''" />
+  <var name="answer" expr="'VIDE'" />
+
+  <form id="main">
+    <!-- Init for Retorik -->
+    <block cond="start">
+      <var name="action" expr="'auth'"/>
+      <var name="aLicence" expr="license" />
+      <data name="auth" src="http://paas.schm.fr/rest?method=authentification" method="post" enctype="application/json" namelist="aLicence" fetchtimeout="15s"/>
+      <assign name="id" expr = "auth.authentification.response" />
+      <log>RETORIK : Session ID=<value expr="id"/></log>
+      <assign name="start" expr="false"/>
+      <assign name="prompt" expr="'Salut, je suis Voxibotte l\'agent virtuel du Club des Professionnels de la Relation Client.'"/>
+      <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+      <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+      <assign name="prompt" expr="'Qu\'est ce que tu veux?'"/>
+    </block>
+
+    <!-- Get the user input-->
+    <field cond="true" name = "text">
+      <property name="timeout" value="10s"/>
+      <grammar srcexpr="'alias_'+lang+'.grxml'"/>
+      <grammar srcexpr="'phrases_'+lang+'.txt'"/>
+      <grammar srcexpr="'builtin:grammar/text?'+lang"/>
+      <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+      <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+      <filled>
+        <prompt cond="lang=='fr' &amp;&amp; echo" xml:lang="fr-FR">Vous avez dit: <value expr="text"/></prompt>
+        <prompt cond="lang=='en' &amp;&amp; echo" xml:lang="en-UK">You said: <value expr="text"/></prompt>
+        <script>log('User: '+text);</script>
+      </filled>
+    </field>
+
+    <!-- Process the user input -->
+    <block name="block">
+      <var name="action" expr="'sendText'"/>
+      <var name="idSession" expr="id"/>
+      <var name="aQuery" expr="text"/>
+      <var name="arg1" expr="id"/>
+      <var name="arg2" expr="text"/>
+
+      <log>RETORIK : input:<value expr="aQuery"/></log>
+      <data name="sendtext" src="http://paas.schm.fr/rest?method=convers_sendQuery" method="get" namelist="idSession aQuery" fetchtimeout="15s"/>
+
+      <if cond="sendtext.documentElement.getElementsByTagNameNS('', 'response').item(0).hasChildNodes()">
+        <assign name="prompt" expr="sendtext.documentElement.getElementsByTagNameNS('', 'response').item(0).firstChild.data;"/>
+      <else/>
+        <assign name="prompt" expr="'J\'ai rien compris, tu peux reposer ta question?'"/>
+      </if>
+
+      <log>RETORIK : result:<value expr="prompt"/></log>
+
+      <if cond="prompt[0] == '2'">
+        <assign name="action" expr="'TRANSFER'"/>
+      </if>
+
+      <if cond="action">
+        <!-- TRANSFER -->
+        <if cond="action == 'TRANSFER'">
+          <assign name="destination" expr="'0630487458'"/>
+          <prompt cond="lang=='fr'" xml:lang="fr-FR"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='en'" xml:lang="en-UK"><value expr="prompt"/></prompt>
+          <prompt cond="lang=='es'" xml:lang="es-ES"><value expr="prompt"/></prompt>
+          <script>log(name+'(transfer): '+':'+prompt);</script>
+          <throw event="agent"/>
+        <else/>
+          <script>log(name+': '+prompt);</script>
+        </if>
+      </if>
+
+      <clear namelist="block text"/>
+
+      <goto next="#main"/>
+    </block>
+  </form>
+ </vxml>
