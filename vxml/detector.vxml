@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF8"?>
+<vxml version="2.0" xmlns="http://www.w3.org/2001/vxml" application="root.vxml" xml:lang="fr-FR">
+  <form>
+		<!-- Activate (false) or not AMD (true) -->
+    <block cond="false">
+      <prompt>
+        <audio src="application:Wait(1)"/>
+      </prompt>      
+      <goto next="#next"/>
+    </block>
+    <block cond="true">
+      <prompt>
+        <audio src="application:Wait(1)"/>
+      </prompt>
+      <prompt cond="lang=='fr'" xml:lang="fr-FR">Allô?</prompt>
+      <prompt cond="lang=='en'" xml:lang="en-UK">Hello</prompt>
+      <prompt cond="lang=='es'" xml:lang="es-ES">Diga?</prompt>
+      <prompt cond="lang=='de'" xml:lang="de-DE">Hallo</prompt>
+    </block>
+    <transfer name="detector" bridge="true" dest="application:AMD()=AMDSTATUS" />
+    <transfer name="detectorcause" bridge="true" dest="execute:get(AMDCAUSE)" />
+    <block>      
+      <if cond="detector$.value=='MACHINE'">
+        <if cond="detectorcause$.value.substring(0, 14)=='INITIALSILENCE'">
+        <assign name="result" expr="'silence'"/>
+        <goto next="#next"/>
+        <else/>
+        <assign name="result" expr="'machine'"/>
+     </if>
+     <elseif cond="detector$.value=='HUMAN'"/>
+        <assign name="result" expr="'human'"/>
+        <goto next="#next"/>
+     <elseif cond="detector$.value=='NOTSURE'"/>
+        <assign name="result" expr="'notsure'"/>
+     <elseif cond="detector$.value=='HANGUP'"/>
+        <assign name="result" expr="'hangup'"/>
+        <disconnect/>
+     <else/>
+        <assign name="result" expr="'other'"/>
+      </if>
+      <prompt>
+        <audio src="application:Wait(1)"/>
+      </prompt>
+    </block>
+    <transfer name="waitsilence" bridge="true" dest="application:WaitForSilence(2000,1,60)"/>
+    <transfer name="waitstatus" bridge="true" dest="execute:get(WAITSTATUS)" />
+    <block>
+      <if cond="waitstatus$.value=='TIMEOUT'">
+        <assign name="result" expr="'nosilence'"/>
+        <disconnect/>
+      <else/>
+        <assign name="result" expr="'machine'"/>
+        <goto next="machine.vxml"/>
+      </if>
+    </block>
+  </form>
+  <form id="next">
+    <block>
+      <goto next="welcome.vxml"/>
+    </block>
+  </form>
+</vxml>
