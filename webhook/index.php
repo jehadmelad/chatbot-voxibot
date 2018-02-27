@@ -20,7 +20,7 @@ $update_response = file_get_contents("php://input");
 $update = json_decode($update_response, true);
 
 debug("\n\n\n");
-//debug(">>>> JSON : ".json_encode($update, JSON_PRETTY_PRINT));
+debug(">>>> JSON : ".json_encode($update, JSON_PRETTY_PRINT));
 debug("----");
 
 // Session ID
@@ -43,8 +43,6 @@ if (session_start())
   if (isset($sessionid))
   debug("Start session=" . $sessionid);
 }
-
-debug("    session=" . json_encode($_SESSION));
 
 if (isset($update["lang"])) {
   $_SESSION['lang'] = $update["lang"];
@@ -97,6 +95,15 @@ if ($update["result"]["action"] != '')
   $GLOBALS["action"] = $update["result"]["action"];
   debug("    action=".$GLOBALS["action"]);
 }
+
+// Wit.ai
+if (isset($update["result"]["entities"]["intent"]))
+//if ($update["entities"]["intent"][0] != '')
+{
+  $GLOBALS["action"] = 'execute.'.$update["result"]["entities"]["intent"][0]['value'];
+  debug("    action=".$GLOBALS["action"]);
+}
+
 
 if (isset($update["result"]["metadata"]))
 if (isset($update["result"]["metadata"]["intentName"]))
@@ -256,6 +263,8 @@ if (isset($GLOBALS['action']))
               include $GLOBALS["action_file"]."/index.php";
               debug("Back to main file.");
             }
+            debug("Script ".$GLOBALS["action_file"]." not found!");
+            $GLOBALS['output'] = "Script ERROR";
           }
     }
   }
@@ -274,16 +283,17 @@ debug("    session=" . json_encode($_SESSION));
 if (isset($GLOBALS["output"]))
 $GLOBALS["speech"] = template($GLOBALS["output"]);
 else
+if (isset($GLOBALS["speech"]))
 $GLOBALS["speech"] = template($GLOBALS["speech"]);
 
+if (isset($GLOBALS["speech"]))
 debug("    speech(output)=".$GLOBALS["speech"]);
-
 
 // Get Action
 $message_answer = processMessage($update);
 
 debug("----");
-//debug("<<<< JSON : ".json_encode($message_answer, JSON_PRETTY_PRINT));
+debug("<<<< JSON : ".json_encode($message_answer, JSON_PRETTY_PRINT));
 
 sendMessage($message_answer);
 

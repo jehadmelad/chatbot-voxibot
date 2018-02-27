@@ -107,9 +107,8 @@ function database_set($phone, $parameters) {
 }
 
 function processMessage($update) {
-  $message = array(
-    "source" => $update["result"]["source"],
 
+  $message = array(
     "speech" => $GLOBALS['speech'],
     "displayText" => $GLOBALS['speech'],
 
@@ -128,8 +127,21 @@ function processMessage($update) {
     ),
 */
 
+    "data" => array(),
+
+/*
     "data" => array(
-      "google" => array(
+      "telegram" => array(
+        "text" => "Telegrame ans",
+        "parse_mode" => "Markdown",
+        )
+    ),
+*/
+
+  );
+
+  if (isset($GLOBALS["voice"]))
+  $message["data"]["google"] = array(
         "expect_user_response" => !isset($GLOBALS['hangup']),
         "is_ssml" => true, //!isset($GLOBALS['nossml']),
         "permissions_request" => array(
@@ -155,19 +167,10 @@ function processMessage($update) {
 */
           ),
         ),
-      ),
-    ),
+      );
 
-/*
-    "data" => array(
-      "telegram" => array(
-        "text" => "Telegrame ans",
-        "parse_mode" => "Markdown",
-        )
-    ),
-*/
-
-  );
+  if (isset($update["result"]["source"]))
+  $message["source"] = $update["result"]["source"];
 
   if (isset($GLOBALS['result']['event']))
   {

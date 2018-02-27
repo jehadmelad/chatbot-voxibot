@@ -21,37 +21,6 @@
   <property name="continuetimeout" value="5s"/>
   <property name="maxspeechtimeout" value="10s"/>
 
-  <!-- CHATBOT configuration -->
-  <var name="chatbot" expr="'dialogflow'"/>
-
-  <!-- DialogFlow (Google) -->
-  <property name="authorization3" value="e038824f-1f31-450d-bd82-c5e2425dd454:cY3ipjz2UxYN"/>
-  <property name="authorization1" value="Bearer 135b1757028c4a0e992385969edd4d27"/><!-- CoolBot -->
-  <property name="authorization2" value="330a818b-25db-448e-ad9d-cedbe5b05054:xYxlljrLeEZ1"/>
-  <property name="authorization3" value="Bearer 2e0a1df997b842f18b1530e351759d91"/><!-- Voximal -->
-  <property name="authorization6" value="Bearer 2e0a1df997b842f18b1530e351759d91"/><!-- CPRC-->
-  <property name="authorization7" value="Bearer 943fd267b83641a9909bcb01d7bfe082"/><!-- AccorHotels -->
-  <property name="authorization7" value="Bearer 943fd267b83641a9909bcb01d7bfe082"/><!-- TUI -->
-  <property name="authorization" value="Bearer b091f8442ab64407ad6a9bd6c4d45c2c"/><!-- Voxibot -->
-
-  <!-- Watson -->
-  <property name="authorization2" value="75515b04-a127-4c7e-b514-771f721661a4:neZ25WigWNgg"/>
-  <var name="workspace2" expr="'eedae83b-a7f4-4f8f-a940-63a34f9ec4d6'"/>
-  <property name="authorization2" value="bdc65ee5-1610-4b3b-982b-9eace8fbef52:j0gbwEGy6zgS"/>
-  <var name="workspace" expr="'2f26422d-0805-4174-9b18-f15f0c1b4d93'"/>
-
-  <!-- Retorik (Davi) -->
-  <var name="license2" expr="'etmNebnYdS5qmkajqVT3FkbO2E8cmnxn1lZSXVvAUzBy1P!fzn4d8Vp3D3Fv89rAb3nPFczuu1hTjIX1l1hUCjEXs5GB2IwWooe0ACZbJn9XF9FD2RpkDTbO6yO6r0irVPn1v6K8fIFDJPAKmB4sCiUclCJbwqk96JyfTfm6U3gaIqGTVrlizoGwyaJYzUexgHxi8eHbZZFO6NevsGD6bjQdLMpG5e9evQmbQL913!DsoKha9BMY932ULCFRLSw+9MHVwrsJnyNTKuI!!BO9mWWO50RqnhRZcJMOGmUzu42hoM1I8ToOm8jT04uj0!ow0xqA+GplIgSTDehqn!yjuA=='"/>
-  <var name="license" expr="'k7vaOQNOcIbnceVg7R+MFMR5xCm!DE2hO4IFT5B4!WAo7aaCx03e!w51+cOxg!Yix3wHATWmST2c3qhq9eULEJUtCIVVou6ctfj1zyNHohOJdnzvIwBLfSxy5kplgTfoJd3NQbr6XaWjVe!jHPzgm7lEKFGm6K8ztodsItUZDCYBNDIN56Txw1DGNbnpnZ0xLS+xYsQQ0drlMtVHPUF5JXow!7bFr9!ZF81Zyu6CB1LC75FpcP1FcgFkJapgKbfACbGDK3NrBi2FnyLbBJZASHLneT1zVsl0IwoBncYgsLFtZ6gvdcP9y8xccoyJU69my1osaziXVvjJsAQuYodotw=='"/> <!-- CoolBot-->
-
-  <!-- Smartly -->
-  <var name="client_id" expr="'smartly_app'"/>
-  <var name="client_secret" expr="'c7bb629c474ce18d44d93452ff15cb2a3658ed0f'"/>
-  <var name="username" expr="'voxybot@gmail.com'"/>
-  <var name="password" expr="'voxybot2017'"/>
-  <var name="skill_id2" expr="'59c02d61f35cf400078f0f56'"/>
-  <var name="skill_id" expr="'59ef1920f9957c00079ca292'"/>
-
   <!-- CALL configuration -->
   <var name="caller" expr="session.connection.remote.uri"/>
   <var name="called" expr="session.connection.local.uri"/>
@@ -66,7 +35,8 @@
   <var name="name" expr="'VOXIBOT'"/>
   <var name="lang" expr="'fr'"/><!-- Language (fr,en,es)-->
   <var name="detector" expr="false"/><!-- Answering Machine Detector (false,true)-->
-  <var name="welcome" expr="'Cette appel sera enregistré afin d\'améliorer la réponse de notre agent virtuel.'"/><!-- Welcome message -->
+  <var name="_welcome" expr="'Cette appel sera enregistré afin d\'améliorer la réponse de notre agent virtuel.'"/><!-- Welcome message -->
+  <var name="welcome" />
   <var name="echo" expr="false"/>
   <var name="record" expr="true"/>
   <var name="mail" expr="true"/>
@@ -79,6 +49,39 @@
   <var name="address" expr="'borja.sixto@ulex.fr'"/>
   <var name="key" expr="'moreno'"/>
   <var name="format" expr="'ogg'"/>
+
+  <!-- CHATBOT configuration -->
+  <var name="chatbot" expr="'wit'"/>
+
+  <!-- DialogFlow (Google) -->
+  <property name="authorization3" value="e038824f-1f31-450d-bd82-c5e2425dd454:cY3ipjz2UxYN"/>
+  <property name="authorization1" value="Bearer 135b1757028c4a0e992385969edd4d27"/><!-- CoolBot -->
+  <property name="authorization2" value="330a818b-25db-448e-ad9d-cedbe5b05054:xYxlljrLeEZ1"/>
+  <property name="authorization3" value="Bearer 2e0a1df997b842f18b1530e351759d91"/><!-- Voximal -->
+  <property name="authorization6" value="Bearer 2e0a1df997b842f18b1530e351759d91"/><!-- CPRC-->
+  <property name="authorization7" value="Bearer 943fd267b83641a9909bcb01d7bfe082"/><!-- AccorHotels -->
+  <property name="authorization7" value="Bearer 943fd267b83641a9909bcb01d7bfe082"/><!-- TUI -->
+  <property name="_authorization" value="Bearer b091f8442ab64407ad6a9bd6c4d45c2c"/><!-- Voxibot -->
+
+  <!-- Watson -->
+  <property name="authorization2" value="75515b04-a127-4c7e-b514-771f721661a4:neZ25WigWNgg"/>
+  <var name="workspace2" expr="'eedae83b-a7f4-4f8f-a940-63a34f9ec4d6'"/>
+  <property name="authorization2" value="bdc65ee5-1610-4b3b-982b-9eace8fbef52:j0gbwEGy6zgS"/>
+  <var name="workspace" expr="'2f26422d-0805-4174-9b18-f15f0c1b4d93'"/>
+
+  <!-- Retorik (Davi) -->
+  <var name="license" expr="'k7vaOQNOcIbnceVg7R+MFMR5xCm!DE2hO4IFT5B4!WAo7aaCx03e!w51+cOxg!Yix3wHATWmST2c3qhq9eULEJUtCIVVou6ctfj1zyNHohOJdnzvIwBLfSxy5kplgTfoJd3NQbr6XaWjVe!jHPzgm7lEKFGm6K8ztodsItUZDCYBNDIN56Txw1DGNbnpnZ0xLS+xYsQQ0drlMtVHPUF5JXow!7bFr9!ZF81Zyu6CB1LC75FpcP1FcgFkJapgKbfACbGDK3NrBi2FnyLbBJZASHLneT1zVsl0IwoBncYgsLFtZ6gvdcP9y8xccoyJU69my1osaziXVvjJsAQuYodotw=='"/> <!-- CoolBot-->
+
+  <!-- Smartly -->
+  <var name="client_id" expr="'smartly_app'"/>
+  <var name="client_secret" expr="'c7bb629c474ce18d44d93452ff15cb2a3658ed0f'"/>
+  <var name="username" expr="'voxybot@gmail.com'"/>
+  <var name="password" expr="'voxybot2017'"/>
+  <var name="skill_id2" expr="'59c02d61f35cf400078f0f56'"/>
+  <var name="skill_id" expr="'59ef1920f9957c00079ca292'"/>
+
+  <!-- Wit -->
+  <var name="access_token" expr="'YKJ5LHCBIUBTAQQX6UXIB6MGDXW5WV34'"/>
 
   <link dtmf="*" next="#agent"/>
   <catch event="agent">
@@ -104,7 +107,7 @@ function debug(text)
 }
   </script>
 
-  <catch event="error">
+  <catch event="_error">
     <assign name="result" expr="'ERROR'"/>
     <goto next="#disconnect"/>
     <disconnect/>
