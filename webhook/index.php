@@ -204,6 +204,11 @@ if (isset($GLOBALS['action']))
             $_SESSION["voice"] = $update["result"]["parameters"]["voice"];
           }
           break;
+      case 'session.set':
+          {
+            $_SESSION["parameters"] = $update["result"]["parameters"];
+          }
+          break;
       case 'database.get':
           {
             $phone = get_parameter('phone');
@@ -248,6 +253,18 @@ if (isset($GLOBALS['action']))
             debug("    data=".json_encode($_SESSION["data"]));
           }
           break;
+      case 'callback':
+          {
+            if ($update["originalRequest"]["source"] == "google")
+            include "call/index.php";
+          }
+          break;
+      case 'call':
+          {
+            if ($update["originalRequest"]["source"] == "google")
+            include "call/index.php";
+          }
+          break;
       default:
           {
             $action_elements = explode('.', $action);
@@ -258,13 +275,18 @@ if (isset($GLOBALS['action']))
             $GLOBALS['action_function'] = $action_elements[2];
 
             if ($action_elements[0] == "execute")
-            if (file_exists($GLOBALS["action_file"]."/index.php"))
             {
-              include $GLOBALS["action_file"]."/index.php";
-              debug("Back to main file.");
+              if (file_exists($GLOBALS["action_file"]."/index.php"))
+              {
+                include $GLOBALS["action_file"]."/index.php";
+                debug("Back to main file.");
+              }
+              else
+              {
+                debug("Script ".$GLOBALS["action_file"]." not found!");
+                $GLOBALS['output'] = "Script ERROR";
+              }
             }
-            debug("Script ".$GLOBALS["action_file"]." not found!");
-            $GLOBALS['output'] = "Script ERROR";
           }
     }
   }

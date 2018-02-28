@@ -51,7 +51,7 @@
   <var name="format" expr="'ogg'"/>
 
   <!-- CHATBOT configuration -->
-  <var name="chatbot" expr="'wit'"/>
+  <var name="chatbot" expr="'dialogflow'"/>
 
   <!-- DialogFlow (Google) -->
   <property name="authorization3" value="e038824f-1f31-450d-bd82-c5e2425dd454:cY3ipjz2UxYN"/>
@@ -61,7 +61,7 @@
   <property name="authorization6" value="Bearer 2e0a1df997b842f18b1530e351759d91"/><!-- CPRC-->
   <property name="authorization7" value="Bearer 943fd267b83641a9909bcb01d7bfe082"/><!-- AccorHotels -->
   <property name="authorization7" value="Bearer 943fd267b83641a9909bcb01d7bfe082"/><!-- TUI -->
-  <property name="_authorization" value="Bearer b091f8442ab64407ad6a9bd6c4d45c2c"/><!-- Voxibot -->
+  <property name="authorization" value="Bearer b091f8442ab64407ad6a9bd6c4d45c2c"/><!-- Voxibot -->
 
   <!-- Watson -->
   <property name="authorization2" value="75515b04-a127-4c7e-b514-771f721661a4:neZ25WigWNgg"/>
@@ -107,19 +107,22 @@ function debug(text)
 }
   </script>
 
-  <catch event="_error">
+  <catch event="error">
     <assign name="result" expr="'ERROR'"/>
+    <script>log(name+'(error): [hangup]');</script>
     <goto next="#disconnect"/>
     <disconnect/>
   </catch>
 
   <catch event="connection.disconnect.hangup">
+   <script>log(name+'(disconnect): [hangup]');</script>
    <assign name="result" expr="'HANGUP'"/>
    <goto next="#disconnect"/>
    <exit/>
   </catch>
 
   <catch event="connection.disconnect.transfer">
+   <script>log(name+'(disconnect): [transfer]');</script>
    <assign name="result" expr="'TRANSFER='+destination"/>
    <goto next="#disconnect"/>
    <exit/>
@@ -127,6 +130,7 @@ function debug(text)
 
   <noinput count="1">
     <var name="rand" expr="Math.floor(Math.random()*3)+1"/>
+    <script>log(name+'(noinput:1): [prompt '+lang+':'+rand+']');</script>
     <prompt cond="lang=='fr' &amp;&amp; rand==1" xml:lang="fr-FR">Je ne vous ai pas entendu.</prompt>
     <prompt cond="lang=='fr' &amp;&amp; rand==2" xml:lang="fr-FR">Je ne vous entends pas.</prompt>
     <prompt cond="lang=='fr' &amp;&amp; rand==3" xml:lang="fr-FR">Je vous écoute.</prompt>
@@ -139,6 +143,7 @@ function debug(text)
   </noinput>
   <noinput count="2">
     <var name="rand" expr="Math.floor(Math.random()*3)+1"/>
+    <script>log(name+'(noinput:2): [prompt '+lang+':'+rand+']');</script>
     <prompt cond="lang=='fr' &amp;&amp; rand==1" xml:lang="fr-FR">Je vous repose la question:</prompt>
     <prompt cond="lang=='fr' &amp;&amp; rand==2" xml:lang="fr-FR">Ma question est:</prompt>
     <prompt cond="lang=='fr' &amp;&amp; rand==3" xml:lang="fr-FR">Je répète:</prompt>
@@ -151,10 +156,12 @@ function debug(text)
     <reprompt/>
   </noinput>
   <noinput count="3">
+    <script>log(name+'(noinput:3): [prompt '+lang+':'+rand+']');</script>
     <prompt>Désolé, mais je ne vous entend toujours pas. Je vous repose la question.</prompt>
     <reprompt/>
   </noinput>
   <noinput count="4">
+    <script>log(name+'(noinput:4): [prompt '+lang+':disconnect');</script>
     <assign name="result" expr="'NOINPUT'"/>
     <prompt bargein="false">
      Je ne vous entends toujours pas, je vous propose de me rappeler ultérieurement.
@@ -164,22 +171,27 @@ function debug(text)
 
   <nomatch count="1">
     <var name="rand" expr="Math.floor(Math.random()*3)+1"/>"
+    <script>log(name+'(nomatch:1): [prompt '+lang+':'+rand+']');</script>
     <prompt cond="lang=='fr' &amp;&amp; rand==1" xml:lang="fr-FR">Je ne vous ai pas compris.</prompt>
     <prompt cond="lang=='fr' &amp;&amp; rand==2" xml:lang="fr-FR">Je ne vous comprends pas.</prompt>
     <prompt cond="lang=='fr' &amp;&amp; rand==3" xml:lang="fr-FR">J'ai un problème pour vous comprendre.</prompt>
   </nomatch>
   <nomatch count="2">
     <var name="rand" expr="Math.floor(Math.random()*3)+1"/>"
+    <script>log(name+'(nomatch:2): [prompt '+lang+':'+rand+']');</script>
     <prompt cond="lang=='es' &amp;&amp; rand==1" xml:lang="fr-FR">Je vous repose la question:</prompt>
     <prompt cond="lang=='es' &amp;&amp; rand==2" xml:lang="fr-FR">Ma question est:</prompt>
     <prompt cond="lang=='es' &amp;&amp; rand==3" xml:lang="fr-FR">Je répète:</prompt>
     <reprompt/>
   </nomatch>
   <nomatch count="3">
+    <var name="rand" expr="Math.floor(Math.random()*3)+1"/>"
+    <script>log(name+'(nomatch:3): [prompt '+lang+':'+rand+']');</script>
     <prompt>Désolé, mais je ne vous comprends toujours pas. Je vous repose la question.</prompt>
     <reprompt/>
   </nomatch>
   <nomatch count="4">
+    <script>log(name+'(nomatch:4): [prompt '+lang+':disconnect');</script>
     <assign name="result" expr="'NOMATCH'"/>
     <prompt bargein="false">
      Je ne vous entends toujours pas, je vous propose de me rappeler ultérieurement.
@@ -207,7 +219,7 @@ function debug(text)
       <log>[<value expr="name.toUpperCase()"/>]:<value expr="id"/> result=<value expr="result"/></log>
     </block>
     <var name="subject" expr="'['+name.toUpperCase()+'] Call ('+caller+', '+queries+', '+result+')'"/>
-    <var name="body" expr="'Caller:\n'+caller+' > '+called+'\n\nID:\n'+id+'\n\nQueries:\n'+queries+'\n\nResult:\n'+result+'\n\n'+'Logs:'+logs"/>
+    <var name="body" expr="'Caller:\n'+caller+' > '+called+'\n\nID:\n'+id+'\n\nInteractions:\n'+queries+'\n\nResult:\n'+result+'\n\n'+'Logs:'+logs"/>
     <transfer cond="mail &amp; record" bridge="true" dest="execute:stopmixmonitor()"/>
     <transfer cond="mail &amp; record" name="filename" bridge="true" dest="execute:get(MIXMONITOR_FILENAME)" />
     <object cond="mail &amp; record" name="attachment"  classid="pick">

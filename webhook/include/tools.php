@@ -13,6 +13,9 @@ function get_parameter($name, $default='?')
   if (isset($GLOBALS['parameters'][$name]))
   return $GLOBALS['parameters'][$name];
 
+  if (isset($_SESSION['parameters'][$name]))
+  return $_SESSION['parameters'][$name];
+
   return $default;
 }
 
