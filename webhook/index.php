@@ -30,13 +30,14 @@ if (isset($update["sessionId"]))
   $sessionid = str_replace(".", "-", $sessionid);
   session_id($sessionid);
 }
-if (isset($update["session"]))
-{
-  $sessionid= $update['session'];
-  $sessionid = str_replace(".", "-", $sessionid);
-  session_id($sessionid);
-}
-
+// This code it is same as previous one, so i think it is not necessery 
+//if (isset($update["session"]))
+//{
+//  $sessionid= $update['session'];
+// $sessionid = str_replace(".", "-", $sessionid);
+//  session_id($sessionid);
+//}
+// here we can put the date of session to know the log, also we need the timezone 
 if (session_start())
 {
   debug("Server=".$_SERVER['HTTP_USER_AGENT']);
@@ -60,7 +61,7 @@ if (isset($update["result"]["parameters"])) {
   $GLOBALS["parameters"] = $update["result"]["parameters"];
 
   foreach ($GLOBALS["parameters"] as $key => $value) {
-    //debug("{$key} => {$value} ");
+    debug("{$key} => {$value} ");
 
     $GLOBALS["parameters"][$key] = utf8_decode(template($GLOBALS["parameters"][$key]));
 
