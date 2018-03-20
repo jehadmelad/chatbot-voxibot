@@ -51,7 +51,7 @@
   $GLOBALS['result']['value'] = $value;
 
   debug("Calculator : " . json_encode($GLOBALS['result']));
-
+// i understood the pervious coding but last one under this comment
   if (is_json())
   {
     sendMessage($GLOBALS['result']);
